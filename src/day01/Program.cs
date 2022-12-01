@@ -7,14 +7,12 @@ var perElf = input
                     .Sum()
                 );
 
-var found = perElf.Select((elfCalories, elfIndex) => new ElfCalories(elfIndex, elfCalories)).MaxBy(elfData => elfData.Calories);
-System.Console.WriteLine($"{found.Index} = {found.Calories}");
+var topThree = perElf.Select((elfCalories, elfIndex) => new ElfCalories(elfIndex, elfCalories)).OrderByDescending(elfData => elfData.Calories).Take(3);
 
-if (args.Length == 2)
-{
-    var i = 0;
-    foreach(var elfCalories in perElf)
-        System.Console.WriteLine($"{i++,3}:{elfCalories}");
-}
+foreach(var item in topThree)
+    System.Console.WriteLine($"{item.Index}:{item.Calories}");
+
+var total = topThree.Sum(elf => elf.Calories);
+System.Console.WriteLine($"\nTotal: {total}");
 
 record struct ElfCalories (int Index, long Calories);

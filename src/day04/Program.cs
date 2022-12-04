@@ -11,19 +11,17 @@ if (args.Length == 1 && args[0] == "test1")
 }
 
 var input = System.IO.File.ReadAllLines("../../inputs/day04/input");
-var overlappingRanges = FullyOverlappingRanges(input);
+var overlappingRanges = OverlappingRanges(input);
 
 System.Console.WriteLine($"Total: {overlappingRanges.Count}");
 
-IList<OverlappingRange> FullyOverlappingRanges(string[] rangesInStringFormat)
+IList<OverlappingRange> OverlappingRanges(string[] rangesInStringFormat)
 {
     List<OverlappingRange> result = new();
-
     for(int i = 0; i < rangesInStringFormat.Length; i++)
     {
         ParseRanges(rangesInStringFormat[i], out var r1, out var r2);
-
-        if (r1.IsSubRangeOf(r2) || r2.IsSubRangeOf(r1))
+        if (r1.OverlapsWith(r2))
             result.Add(new OverlappingRange(r1, r2));
     }
 
@@ -42,23 +40,11 @@ void Test()
         "2-6,4-8",
     };
 
-    var overlapping = FullyOverlappingRanges(input);
-    if (overlapping.Count != 2)
+    var overlapping = OverlappingRanges(input);
+    if (overlapping.Count != 4)
     {
-        throw new Exception($"Expecting 2 overlapping ranges, got {overlapping.Count}");
+        throw new Exception($"Expecting 4 overlapping ranges, got {overlapping.Count}:\n{string.Join('\n', overlapping.ToArray())}");
     }
-
-    if (overlapping[0].First.Start.Value != 2 || overlapping[0].First.End.Value != 8)
-        throw new Exception($"Unexpected first overlapping range {overlapping[0].First}");
-
-    if (overlapping[0].Second.Start.Value != 3 || overlapping[0].Second.End.Value != 7)
-        throw new Exception($"Unexpected second overlapping range {overlapping[0].Second}");
-
-    if (overlapping[1].First.Start.Value != 6 || overlapping[1].First.End.Value != 6)
-        throw new Exception($"Unexpected first overlapping range {overlapping[1].First}");
-
-    if (overlapping[1].Second.Start.Value != 4 || overlapping[1].Second.End.Value != 6)
-        throw new Exception($"Unexpected Second overlapping range {overlapping[1].Second}");
 
     System.Console.WriteLine("Success");
 }
@@ -67,16 +53,16 @@ void Test1()
 {
     var input = new [] 
     {
-        "20-40,30-35", 
-        "5-7,7-9", 
+        "20-40,30-35",
+        "5-7,7-9",
         "2-8,3-7", 
-        "60-61,50-65", 
+        "60-61,50-65",
     };
 
-    var overlapping = FullyOverlappingRanges(input);
-    if (overlapping.Count != 3)
+    var overlapping = OverlappingRanges(input);
+    if (overlapping.Count != 4)
     {
-        throw new Exception($"Expecting 3 overlapping ranges, got {overlapping.Count}:\n{string.Join('\n', overlapping.ToArray())}");
+        throw new Exception($"Expecting 4 overlapping ranges, got {overlapping.Count}:\n{string.Join('\n', overlapping.ToArray())}");
     }
 
     System.Console.WriteLine("Success");
@@ -104,6 +90,12 @@ void ParseRanges(string twoRanges, out Range r1, out Range r2)
 static class RangeExtensions
 {
     public static bool IsSubRangeOf(this Range self, Range toBeChecked) => toBeChecked.Start.Value >= self.Start.Value && toBeChecked.End.Value <= self.End.Value;
+    public static bool OverlapsWith(this Range self, Range toBeChecked)
+    {
+        if (toBeChecked.Start.Value >= self.Start.Value) return toBeChecked.Start.Value <= self.End.Value;
+
+        return self.Start.Value <= toBeChecked.End.Value;
+    }
 }
 
 record struct OverlappingRange(Range First, Range Second);

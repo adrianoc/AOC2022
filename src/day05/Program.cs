@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Buffers;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -109,8 +110,14 @@ IList<Stack<string>> RearrangeCrates(InputData inputData)
         var source = inputData.Crates[move.SourceCrate];
         var target = inputData.Crates[move.TargetCrate];
 
+        var tempArray = ArrayPool<string>.Shared.Rent(move.Count);
         for(int i = 0; i < move.Count; i++)
-            target.Push(source.Pop());
+            tempArray[i] = source.Pop();
+
+        for(int i = move.Count - 1 ; i >= 0; i--)
+            target.Push(tempArray[i]);
+
+        ArrayPool<string>.Shared.Return(tempArray);
     }
     return inputData.Crates;
 }
@@ -148,8 +155,8 @@ move 1 from 1 to 2";
     var rearrangedCrates = RearrangeCrates(inputData);
     var rearrangedStackTops = GetTopOfCrates(rearrangedCrates);
 
-    if (rearrangedStackTops != "CMZ")
-        throw new Exception($"Expecting CMZ, got {rearrangedStackTops}\nCrates after rearranging: {CrateStacksToString(rearrangedCrates)}");
+    if (rearrangedStackTops != "MCD")
+        throw new Exception($"Expecting MCD, got {rearrangedStackTops}\nCrates after rearranging: {CrateStacksToString(rearrangedCrates)}");
 
     System.Console.WriteLine("Success");
 }

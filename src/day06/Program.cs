@@ -2,28 +2,29 @@
 
 if (args.Length == 1 && args[0] == "test")
 {
-    Test("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 7);
-    
-    Test("bvwbjplbgvbhsrlpgdmjqwftvncz", 5);
-    Test("nppdvjthqldpwncqszvftbrmjlhg", 6);
-    Test("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 10);
-    Test("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 11);
+
+
+    Test("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 19);
+    Test("bvwbjplbgvbhsrlpgdmjqwftvncz",23);
+    Test("nppdvjthqldpwncqszvftbrmjlhg",23);
+    Test("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg",29);
+    Test("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw",26);
 
     return;
 }
 
 var input = System.IO.File.ReadAllText("../../inputs/day06/input");
-System.Console.WriteLine(StartOfPacketMarkerIndexFor(input));
+System.Console.WriteLine(StartOfPacketMarkerIndexFor(input, 14));
 
-int StartOfPacketMarkerIndexFor(string stream)
+int StartOfPacketMarkerIndexFor(string stream, byte windowSize)
 {
     var buffer = stream.AsSpan();
     for(int i = 0; i < buffer.Length; i++)
     {
-        var duplicatedIndexInWindow = FirstIndexOfDuplicate(buffer.Slice(i, 4));
+        var duplicatedIndexInWindow = FirstIndexOfDuplicate(buffer.Slice(i, windowSize));
         if (duplicatedIndexInWindow == -1)
         {
-            return i + 4;
+            return i + windowSize;
         }
 
         i = i + duplicatedIndexInWindow;
@@ -49,7 +50,7 @@ int FirstIndexOfDuplicate(ReadOnlySpan<char> buffer)
 
 void Test(string stream, int expectedStart)
 {
-    var startOfPacketMarkerIndex = StartOfPacketMarkerIndexFor(stream);
+    var startOfPacketMarkerIndex = StartOfPacketMarkerIndexFor(stream, 14);
     if (startOfPacketMarkerIndex != expectedStart)
         throw new Exception($"Expected: {expectedStart}, Got: {startOfPacketMarkerIndex}");
     

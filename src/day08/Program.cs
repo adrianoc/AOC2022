@@ -5,10 +5,10 @@
 }
 
 var input = System.IO.File.ReadAllText("../../inputs/day08/input");
-var count = CountVisibleTrees(input);
-Console.WriteLine(count);
+var score = ComputeScenicScore(input);
+Console.WriteLine(score);
 
-int CountVisibleTrees(string input)
+int ComputeScenicScore(string input)
 {
     /*
     3 0 3 7 3
@@ -22,70 +22,63 @@ int CountVisibleTrees(string input)
     var n = lines.Length;
     var m = lines[0].Length; // assumes all lines have the same length
 
-    var count = (n * 2) + (m - 2) * 2; // all edges are visible by definition
+    int maxScenicScore = 0; 
 
     for (int i = 1; i < n-1; i++)
     {
         for (int j = 1; j < m-1; j++)
         {
-            bool found = true;
-            for (int x = 0; x < i; x++) // 0..i
+            int leftCount = 0;
+            for (int x = i - 1; x >=0; x--) // 0..i
             {
-                if (lines[i][j] <= lines[x][j])
+                leftCount++;
+                if(lines[i][j] <= lines[x][j])
                 {
-                    found = false;
                     break;
                 }
             }
             
-            if (!found)
+            int rightCount  =0;
+            for (int x = i + 1; x < n; x++) // i + 1..n
             {
-                found = true;
-                for (int x = i + 1; x < n; x++) // i + 1..n
+                rightCount++;
+                if (lines[i][j] <= lines[x][j])
                 {
-                    if (lines[i][j] <= lines[x][j])
-                    {
-                        found = false;
-                        break;
-                    }
+                    break;
                 }
-            }
+            }            
 
-            if (!found)
+            int upCount = 0;
+            for (int y = j - 1; y >=0; y--) // 0..i
             {
-                found = true;
-                for (int y = 0; y < j; y++) // 0..i
+                upCount++;
+                if (lines[i][j] <= lines[i][y])
                 {
-                    if (lines[i][j] <= lines[i][y])
-                    {
-                        found = false;
-                        break;
-                    }
+                    break;
                 }
             }
             
-            if (!found)
+            int downCount = 0;
+            for (int y = j + 1; y < m; y++) // i + 1..n
             {
-                found = true;
-                for (int y = j + 1; y < m; y++) // i + 1..n
+                downCount++;
+                if (lines[i][j] <= lines[i][y])
                 {
-                    if (lines[i][j] <= lines[i][y])
-                    {
-                        found = false;
-                        break;
-                    }
+                    break;
                 }
             }
 
-            if (found)
+            int scenicScore = leftCount * rightCount * upCount * downCount;
+
+            if (scenicScore > maxScenicScore)
             {
-                count++;
-                System.Console.WriteLine($"({i},{j}): {count}");
+                System.Console.WriteLine($"({i},{j}) : {scenicScore}");
+                maxScenicScore = scenicScore;
             }
         }
     }
 
-    return count;
+    return maxScenicScore;
 }
 
 void Test()
@@ -97,9 +90,9 @@ void Test()
 33549
 35390";
 
-    var visibleTreesCount = CountVisibleTrees(input);
-    if (visibleTreesCount != 21)
-        throw new Exception($"Expecting 21 got {visibleTreesCount}");
+    var score = ComputeScenicScore(input);
+    if (score != 8)
+        throw new Exception($"Expecting 8 got {score}");
     
     System.Console.WriteLine("Success");
 }

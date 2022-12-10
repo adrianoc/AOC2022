@@ -148,65 +148,74 @@ addx -6
 addx -11
 noop
 noop
-noop", 13140);
+noop");
 
     return;
 }
 
 var input = System.IO.File.ReadAllLines("../../inputs/day10/input");
 var videoDevice = new VideoDevice(input);
-var signal = CalculateSignalFor(videoDevice);
+videoDevice.Execute();
 
-System.Console.WriteLine($"Result = {signal}");
 
-int CalculateSignalFor(VideoDevice videoDevice)
+void Test(string instructions)
 {
-    var signal = 0;    
-    foreach(uint cycles in new[] {20, 40, 40, 40, 40, 40})
-    {
-        videoDevice.Execute(cycles);
-        System.Console.WriteLine($"[{videoDevice.Cycle}] PC = {videoDevice.CurrentInstruction}, X = {videoDevice.RegisterX}, Signal = {videoDevice.RegisterX * videoDevice.Cycle}");
-        signal += videoDevice.RegisterX * videoDevice.Cycle;
-    }
-
-    return signal;
-}
-
-void Test(string instructions, int expected)
-{
+    //var videoSystem = new VideoDevice(instructions.Split('\n', StringSplitOptions.RemoveEmptyEntries), cycle => cycle == 10 || cycle == 12);
     var videoSystem = new VideoDevice(instructions.Split('\n', StringSplitOptions.RemoveEmptyEntries));
-    
-    var signal = CalculateSignalFor(videoSystem);
-    if (signal != expected)
-        throw new Exception($"Expected: {expected}, Got: {signal}");
-    
-    System.Console.WriteLine($"Success");
+    videoSystem.Execute();
 }
 
 class VideoDevice
 {
-    public VideoDevice(IList<string> instructions, bool debug = false)
+    const int HorizontalResolution = 40;
+
+    public VideoDevice(IList<string> instructions, Predicate<int> showDebug = null)
     {
         this.instructions = Parse(instructions);
-        Cycle = 0;
-        Debug = debug;
+        this.showDebug = showDebug;
     }
 
-    public void Execute(uint cyclesCount)
+    public void Execute()
     {
-        for (int i = 0; i < cyclesCount; i++)
+        Cycle = 0;
+        PC = 0;
+
+        while(PC < instructions.Count)
         {
             Cycle++;
+
             update?.Invoke();
             update = null;
 
-            var previousPC = PC;
+            DrawCRT(Cycle);
+
+            if (showDebug != null && showDebug(Cycle))
+                System.Console.WriteLine($"\n[{Cycle,3}] X = {RegisterX, 4}, PC = {PC} : {instructions[PC].ToString()} ");
+
             if (instructions[PC].Clock(this))
                 PC++;
-            
-            if (Debug)
-                System.Console.WriteLine($"[{Cycle,3}] X = {RegisterX, 4}, PC = {previousPC} : {instructions[previousPC].ToString()} ");
         }
+    }
+
+    private void DrawCRT(int cycle)
+    {
+        var oldFg = Console.ForegroundColor;
+
+        var crtPixelPosition = (cycle - 1) % HorizontalResolution;
+        if (crtPixelPosition >= (RegisterX - 1) && crtPixelPosition <= (RegisterX + 1))
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("#");
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(".");
+        }
+
+        Console.ForegroundColor = oldFg;
+        if (cycle % HorizontalResolution == 0 )
+            Console.WriteLine();
     }
 
     public void RegisterUpdate(Action a) => update = a;
@@ -221,6 +230,8 @@ class VideoDevice
     bool Debug { get; init; }
     public string CurrentInstruction => instructions[PC].ToString();
     private IList<Instruction> instructions;
+
+    private Predicate<int> showDebug;
 
 
     struct InstructionFactory
@@ -282,4 +293,3 @@ class  AddX : Instruction
         return Cycles == 0;
     }
 }
-

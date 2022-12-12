@@ -36,7 +36,7 @@ Monkey 3:
 
 var input = System.IO.File.ReadAllText("../../inputs/day11/input");
 var keepAway = new KeepAway();
-keepAway.Process(input, 20);
+keepAway.Process(input, 10_000);
 
 var staticsSortedByCounter = keepAway.Monkeys.OrderByDescending(stat => stat.InspectionCounter);
 var top2 = staticsSortedByCounter.Take(2).ToArray();
@@ -47,7 +47,7 @@ System.Console.WriteLine($"Result: {monkeyBusinessLevel}");
 void Test(string input)
 {
     var keepAway = new KeepAway();
-    keepAway.Process(input, 20);
+    keepAway.Process(input, 10_000);
 
     var staticsSortedByCounter = keepAway.Monkeys.OrderByDescending(stat => stat.InspectionCounter);
     foreach(var stat in staticsSortedByCounter)
@@ -58,9 +58,8 @@ void Test(string input)
     var top2 = staticsSortedByCounter.Take(2).ToArray();
 
     var monkeyBusinessLevel = top2[0].InspectionCounter * top2[1].InspectionCounter;
-    if (monkeyBusinessLevel != 10605)
+    if (monkeyBusinessLevel != 2713310158)
         throw new Exception($"Expected 10605, got {monkeyBusinessLevel}");
-
     
     Console.WriteLine("Success");
 }
@@ -104,7 +103,7 @@ Monkey inspects an item with a worry level of 79.
         {
             monkey.InspectionCounter++;
 
-            var worryLevel = (int) monkey.Operation.Invoke(item) / 3;
+            var worryLevel = (ulong) monkey.Operation.Invoke(item) % MainMod;
             var targetMonkey = worryLevel % monkey.Action.Divisor == 0 ? monkey.Action.TrueId : monkey.Action.FalseId;
             Monkeys[targetMonkey].StressItems.Add(worryLevel);
             System.Console.WriteLine($"Monkey:{monkey.Id} ({monkey.InspectionCounter}), Item ({item} : {worryLevel}) -> {targetMonkey}");
@@ -128,13 +127,15 @@ Monkey 1:
             var lines = mi.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             
             var id = Int32.Parse(ParseSingle(lines[0], @"^Monkey (\d+):$"));
-            var items = ParseSingle(lines[1], @"^\s+Starting items:\s(.+)$").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => Int32.Parse(item)).ToList();
+            var items = ParseSingle(lines[1], @"^\s+Starting items:\s(.+)$").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(item => UInt64.Parse(item)).ToList();
             var operation = ParseOperation(lines[2]);
-            var test = Int32.Parse(ParseSingle(lines[3], @"\s+Test: divisible by (\d+)"));
+            var test = UInt64.Parse(ParseSingle(lines[3], @"\s+Test: divisible by (\d+)"));
             var trueTarget = Int32.Parse(ParseSingle(lines[4], @"\s+If true: throw to monkey (\d+)"));
             var falseTarget = Int32.Parse(ParseSingle(lines[5], @"\s+If false: throw to monkey (\d+)"));
 
             Monkeys.Add(new Monkey(id, items, operation, new DecisionInfo(test, trueTarget, falseTarget)) { InspectionCounter = 0 } );
+
+            MainMod *= test;
         }
     }
 
@@ -149,7 +150,7 @@ Monkey 1:
         throw new Exception($"{value}! NO MATCH");        
     }
 
-    Func<int, int> ParseOperation(string input)
+    Func<ulong, ulong> ParseOperation(string input)
     {
         var x = Regex.Match(input, @"\s+Operation: new = old (?<operator>\+|\*|-|/) (?<operand>.+)$");
         if (!x.Success)
@@ -160,31 +161,32 @@ Monkey 1:
         {
             return x.Groups[1].Value switch
             {
-                "*" => (int old) => old * old,
-                "-" => (int old) => 0,
-                "+" => (int old) => old + old,
-                "/" => (int old) => 1,
+                "*" => (old) => old * old,
+                "-" => (old) => 0,
+                "+" => (old) => old + old,
+                "/" => (old) => 1,
             };
         }
 
-        var value = Int32.Parse(x.Groups[2].Value);
+        var value = UInt64.Parse(x.Groups[2].Value);
         return x.Groups[1].Value switch
         {
-            "*" => (int old) => old * value,
-            "-" => (int old) => old - value,
-            "+" => (int old) => old + value,
-            "/" => (int old) => old / value,
+            "*" => (old) => old * value,
+            "-" => (old) => old - value,
+            "+" => (old) => old + value,
+            "/" => (old) => old / value,
         };
     }
 
     public IList<Monkey> Monkeys  { get; } = new List<Monkey>();
+    ulong MainMod = 1;
 }
 
-record Monkey(int Id, IList<int> StressItems, Func<int, int> Operation, DecisionInfo Action)
+record Monkey(int Id, IList<ulong> StressItems, Func<ulong, ulong> Operation, DecisionInfo Action)
 {
-    public int InspectionCounter = 0;
+    public ulong InspectionCounter = 0;
 }
 
-record DecisionInfo(int Divisor, int TrueId, int FalseId);
+record DecisionInfo(ulong Divisor, int TrueId, int FalseId);
 
 record struct InspectionStatistic(int Id, int Counter);

@@ -44,17 +44,15 @@ void Print(Packet p, int l)
 
 void Run(string input)
 {
+    var packetList = new List<Packet>();
+    
     var pairs = input.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
-
-    int pairIndex = 1;
-    int sum = 0;
     foreach(var pair in pairs)
     {
         var packets = pair.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        if (ComparePackets(packets[0], packets[1]) < 0)
-            sum += pairIndex;
-
-        pairIndex++;
+        
+        packetList.Add(new Packet(packets[0]));
+        packetList.Add(new Packet(packets[1]));
         
         // Console.Write($"Left:\n\t\t{packets[0]}\n\t\t");
         // PrintPacket(new Packet(packets[0]));
@@ -65,7 +63,18 @@ void Run(string input)
         // Console.WriteLine();
     }
 
-    Console.WriteLine($"Index sum: {sum}");
+    var d1 = new Packet("[[2]]");
+    var d2 = new Packet("[[6]]");
+    packetList.Add(d1);
+    packetList.Add(d2);
+    packetList.Sort((l, r) => ComparePackets2(l, r));
+    foreach (var packet in packetList)
+        Console.WriteLine(packet);
+
+    var d1Index = packetList.IndexOf(d1) + 1;
+    var d2Index = packetList.IndexOf(d2) + 1;
+
+    Console.WriteLine($"Decoder key: {d1Index * d2Index}");
 }
 
 int ComparePackets(string l, string r)
